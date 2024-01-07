@@ -124,8 +124,9 @@ def get_weather(my_city):
 
 def main(city):
     cityLs = city.split("|")
+    print(cityLs)
     for city in cityLs:
         send_weather_message(city)
 
 if __name__ == '__main__':
-    main()
+    main(city)

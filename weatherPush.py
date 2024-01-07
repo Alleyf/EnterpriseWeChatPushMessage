@@ -20,12 +20,48 @@ def send_weather_message(my_city):
     access_token = get_access_token()
     weather = get_weather(my_city)
 
+    # markdown消息
+    json_dict = markdown_message(today_str,weather)
+    json_str = json.dumps(json_dict, separators=(',', ':'))
+    res = requests.post(f"https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}", data=json_str)
+    # print(res.text)
+    if res.json()['errmsg'] == 'ok':
+        print(f"{my_city}天气日报发送成功")
+    else:
+        print(f"{my_city}天气日报发送失败")
+
+
+def markdown_message(today_str,weather):
+    # markdown消息
+    json_dict = {
+      "touser" : userId,
+      "agentid" : agentId,
+      "msgtype": "markdown",
+      "markdown": {
+            "content": """### 天气日报温馨提示
+            
+> - 🦄 **来源** [csFan](https://alleyf.github.io)
+> - 🕐 **日期** {}
+> - 🏰 **区域** {}
+> - 🌈 **天气** {}
+> -  🌡️ **气温** {}
+> - 💨 **风向** {}
+> - 💕 **我想对你说** {}""".format(today_str, weather[0], weather[2], weather[1], weather[3], get_daily_love())
+      },
+      "enable_duplicate_check": 0,
+      "duplicate_check_interval": 1800
+    }
+    return json_dict
+
+
+def template_message(today_str,weather):
+    # 模板消息
     json_dict = {
         "touser" : userId,
         "agentid" : agentId,
         "msgtype" : "template_msg",
         "template_msg" : {
-                "template_id": "ttxxlGlgIAwJrCTFjtndfgHPoIySyk6w",
+                "template_id": weather_template_id,
                 "url": "https://github.com/Alleyf",
                 "content_item": [
                     {
@@ -41,12 +77,8 @@ def send_weather_message(my_city):
                         "value": weather[2]
                     },
                     {
-                        "key": "💧气温",
-                        "value": weather[1]
-                    },
-                    {
-                        "key": "💨风向",
-                        "value": weather[3]
+                        "key": "💧气温 | 💨风向",
+                        "value": weather[1] + "\n" + weather[3]
                     },
                     {
                         "key": "💕我想对你说",
@@ -55,11 +87,8 @@ def send_weather_message(my_city):
                 ]
             }
         }
+    return json_dict
 
-    json_str = json.dumps(json_dict, separators=(',', ':'))
-    res = requests.post(f"https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token={access_token}", data=json_str)
-    print(res.text)
-    return res.json()['errmsg'] == 'ok'
 
 
 def get_access_token():
@@ -124,7 +153,7 @@ def get_weather(my_city):
 
 def main(city):
     cityLs = city.split("|")
-    print(cityLs)
+    # print(cityLs)
     for city in cityLs:
         send_weather_message(city)
 
